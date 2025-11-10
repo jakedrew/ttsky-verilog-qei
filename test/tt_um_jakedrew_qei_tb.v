@@ -106,6 +106,9 @@ module tt_um_jakedrew_qei_tb;
                 junit_fail("step +1 check failed");
                 $finish_and_return(1);
             end
+            `ifdef GL_TEST
+                @(posedge clk);
+            `endif
             if (uo_out[7] !== 1'b1) begin
                 $display("FAILED: DIR not forward on step to A=%0d B=%0d", a, b);
                 junit_fail("dir forward check failed");
@@ -127,6 +130,9 @@ module tt_um_jakedrew_qei_tb;
                 junit_fail("step -1 check failed");
                 $finish_and_return(1);
             end
+            `ifdef GL_TEST
+                @(posedge clk);
+            `endif
             if (uo_out[7] !== 1'b0) begin
                 $display("FAILED: DIR not backward on step to A=%0d B=%0d", a, b);
                 junit_fail("dir backward check failed");
