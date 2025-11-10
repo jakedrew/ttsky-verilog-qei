@@ -19,7 +19,7 @@ module tt_um_jakedrew_qei_tb;
 
     // VCD
     initial begin
-        $dumpfile("build/wave.vcd");
+        $dumpfile("tb.vcd");
         $dumpvars(0, tt_um_jakedrew_qei_tb);
     end
 

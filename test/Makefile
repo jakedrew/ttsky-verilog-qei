@@ -23,7 +23,17 @@ endif
 .PHONY: test lint clean waves
 
 test: $(BUILD)/sim.vvp
-	vvp $(BUILD)/sim.vvp
+	@set -e; \
+	vvp $(BUILD)/sim.vvp; rc=$$?; \
+	if [ -f $(BUILD)/wave.vcd ]; then cp -f $(BUILD)/wave.vcd tb.vcd; fi; \
+	if [ $$rc -eq 0 ]; then \
+	  echo '<testsuite tests="1" failures="0"><testcase classname="$(TOP_MODULE)" name="rtl"/></testsuite>' > results.xml; \
+	else \
+	  echo '<testsuite tests="1" failures="1"><testcase classname="$(TOP_MODULE)" name="rtl"><failure message="simulation failed"/></testcase></testsuite>' > results.xml; \
+	fi; \
+	exit $$rc
+
+
 
 $(BUILD)/sim.vvp: $(SIM_SOURCES) | $(BUILD)
 	iverilog -g2012 -o $(BUILD)/sim.vvp $(IVERILOG_DEFS) $(SIM_SOURCES)
