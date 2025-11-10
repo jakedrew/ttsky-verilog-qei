@@ -9,26 +9,36 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-qei.v: Quadrature Encoder Interface
+**Quadrature x4 decoder with 15-bit up/down count and last-step direction**
 
-Inputs:
-    - A (ui_in[0])
-    - B (ui_in[1])
+- **Inputs:** `A=ui_in[0]`, `B=ui_in[1]` (two-stage sync to `clk`)
+- **Decoding:** `00→01→11→10→00` = +1 per edge; reverse = −1
+- **Outputs (registered):**
+  - `uo_out[7]` — **DIR** (1 = forward, 0 = backward)
+  - `uo_out[6:0]` — count `[6:0]`
+  - `uio_out[7:0]` — count `[14:7]` (driven; `uio_oe=0xFF`)
 
-Outputs:
-    - DIR (uo_out[7], where 1 = forwards, 0 = backwards)
-    - COUNT (uio_out + uo_out[6:0], which is 15 bit count)
-    
 Notes:
-    - DIR is direction relate to last state, so as soon as COUNT starts
-    decreasing DIR will be 0, it is not a negative.
-    - Forward = increasing count.
-    - COUNT is the count since the initial index
-      
+- DIR reports the **last** step direction; it is not a signed count.
+- The exposed count bits give you 15 LSBs across `uio_out` and `uo_out[6:0]`.
+- Use reasonable edge rates on A/B relative to `clk` (e.g., a few clock cycles per A/B edge).
+
 ## How to test
 
-Connect a quadrature output to A and B, and then read COUNT / DIR.
+**On hardware**
+1. Drive encoder A/B into `ui[0]` and `ui[1]`.
+2. Read:
+   - `uo[7]` → DIR (1 = forward, 0 = backward)
+   - `uo[6:0]` → `count[6:0]`
+   - `uio[7:0]` → `count[14:7]`
+3. Turn the encoder forward: count increases and `uo[7]=1`. Reverse: count decreases and `uo[7]=0`.
+
+**Simulation (local)**
+- Run: `make -C test clean test`
+- View waveform: `gtkwave test/tb.vcd`
 
 ## External hardware
 
-Quadrature interface device
+- If your encoder is **single-ended**, connect A/B directly (3.3V logic).
+- If your encoder is **differential** (A/A′, B/B′), use an RS-422/line-receiver to convert to 3.3V CMOS before `ui[0:1]`.
+- Index (Z) is not used in this design.
