@@ -32,11 +32,11 @@ test: $(BUILD)/sim.vvp
 	@sh -c '\
 	  rc=0; \
 	  vvp $(BUILD)/sim.vvp || rc=$$?; \
-	  [ -f $(BUILD)/wave.vcd ] && cp -f $(BUILD)/wave.vcd tb.vcd || true; \
+	  [ -f $(BUILD)/wave.vcd ] && cp -f $(BUILD)/wave.vcd test/tb.vcd || true; \
 	  if [ $$rc -eq 0 ]; then \
-	    printf "%s" "<testsuite tests=\"1\" failures=\"0\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"/></testsuite>" > results.xml; \
+	    printf "%s" "<testsuite tests=\"1\" failures=\"0\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"/></testsuite>" > test/results.xml; \
 	  else \
-	    printf "%s" "<testsuite tests=\"1\" failures=\"1\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"><failure message=\"simulation failed\"/></testcase></testsuite>" > results.xml; \
+	    printf "%s" "<testsuite tests=\"1\" failures=\"1\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"><failure message=\"simulation failed\"/></testcase></testsuite>" > test/results.xml; \
 	  fi; \
 	  exit $$rc'
 
@@ -48,4 +48,4 @@ else
 endif
 
 clean:
-	rm -rf $(BUILD) tb.vcd results.xml
+	rm -rf $(BUILD) test/tb.vcd test/results.xml
