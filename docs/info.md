@@ -9,11 +9,11 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-**Quadrature x4 decoder with 15-bit up/down count and last-step direction**
+Quadrature x4 decoder with 15-bit up/down count and last-step direction.
 
 - **Inputs:** `A=ui_in[0]`, `B=ui_in[1]` (two-stage sync to `clk`)
 - **Decoding:** `00→01→11→10→00` = +1 per edge; reverse = −1
-- **Outputs (registered):**
+- **Outputs:**
   - `uo_out[7]` — **DIR** (1 = forward, 0 = backward)
   - `uo_out[6:0]` — count `[6:0]`
   - `uio_out[7:0]` — count `[14:7]` (driven; `uio_oe=0xFF`)
