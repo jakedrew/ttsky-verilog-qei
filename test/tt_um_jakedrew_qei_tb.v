@@ -49,7 +49,7 @@ module tt_um_jakedrew_qei_tb;
     endfunction
 
     integer k;
-    localparam integer WAIT_CYCLES = 8;
+    localparam integer WAIT_CYCLES = 16;
 
     task wait_sync;
         begin
