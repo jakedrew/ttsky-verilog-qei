@@ -20,28 +20,26 @@ else
   SIM_SOURCES     = $(PROJECT_SOURCES) $(TB_SOURCES)
 endif
 
-.PHONY: test lint clean waves
-
-test: $(BUILD)/sim.vvp
-	@set -e; \
-	vvp $(BUILD)/sim.vvp; rc=$$?; \
-	if [ -f $(BUILD)/wave.vcd ]; then cp -f $(BUILD)/wave.vcd tb.vcd; fi; \
-	if [ $$rc -eq 0 ]; then \
-	  echo '<testsuite tests="1" failures="0"><testcase classname="$(TOP_MODULE)" name="rtl"/></testsuite>' > results.xml; \
-	else \
-	  echo '<testsuite tests="1" failures="1"><testcase classname="$(TOP_MODULE)" name="rtl"><failure message="simulation failed"/></testcase></testsuite>' > results.xml; \
-	fi; \
-	exit $$rc
-
-
-
-$(BUILD)/sim.vvp: $(SIM_SOURCES) | $(BUILD)
-	iverilog -g2012 -o $(BUILD)/sim.vvp $(IVERILOG_DEFS) $(SIM_SOURCES)
+.PHONY: test lint clean
 
 $(BUILD):
 	mkdir -p $(BUILD)
 
-# lint the verilog / RTL (skipped when GATES=yes)
+$(BUILD)/sim.vvp: $(SIM_SOURCES) | $(BUILD)
+	iverilog -g2012 -o $(BUILD)/sim.vvp $(IVERILOG_DEFS) $(SIM_SOURCES)
+
+test: $(BUILD)/sim.vvp
+	@sh -c '\
+	  rc=0; \
+	  vvp $(BUILD)/sim.vvp || rc=$$?; \
+	  [ -f $(BUILD)/wave.vcd ] && cp -f $(BUILD)/wave.vcd tb.vcd || true; \
+	  if [ $$rc -eq 0 ]; then \
+	    printf "%s" "<testsuite tests=\"1\" failures=\"0\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"/></testsuite>" > results.xml; \
+	  else \
+	    printf "%s" "<testsuite tests=\"1\" failures=\"1\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"><failure message=\"simulation failed\"/></testcase></testsuite>" > results.xml; \
+	  fi; \
+	  exit $$rc'
+
 lint:
 ifeq ($(GATES),yes)
 	@echo "lint: skipped for gate-level"
@@ -50,4 +48,4 @@ else
 endif
 
 clean:
-	rm -rf $(BUILD)
+	rm -rf $(BUILD) tb.vcd results.xml
