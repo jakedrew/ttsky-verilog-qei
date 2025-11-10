@@ -14,14 +14,13 @@ Quadrature x4 decoder with 15-bit up/down count and last-step direction.
 - **Inputs:** `A=ui_in[0]`, `B=ui_in[1]` (two-stage sync to `clk`)
 - **Decoding:** `00→01→11→10→00` = +1 per edge; reverse = −1
 - **Outputs:**
-  - `uo_out[7]` — **DIR** (1 = forward, 0 = backward)
-  - `uo_out[6:0]` — count `[6:0]`
-  - `uio_out[7:0]` — count `[14:7]` (driven; `uio_oe=0xFF`)
+  - `uo_out[7]` — DIR (1 = forward, 0 = backward)
+  - `uo_out[6:0]` — COUNT `[6:0]`
+  - `uio_out[7:0]` — COUNT `[14:7]`
 
 Notes:
 - DIR reports the **last** step direction; it is not a signed count.
 - The exposed count bits give you 15 LSBs across `uio_out` and `uo_out[6:0]`.
-- Use reasonable edge rates on A/B relative to `clk` (e.g., a few clock cycles per A/B edge).
 
 ## How to test
 
