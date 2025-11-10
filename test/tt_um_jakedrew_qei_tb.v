@@ -23,6 +23,12 @@ module tt_um_jakedrew_qei_tb;
         $dumpvars(0, tt_um_jakedrew_qei_tb);
     end
 
+    // 15-bit observable count
+    function [14:0] full15;
+        input [7:0] uo, uio;
+        begin full15 = {uio, uo[6:0]}; end
+    endfunction
+
     integer k;
     localparam integer WAIT_CYCLES = 8;
 
@@ -139,22 +145,55 @@ module tt_um_jakedrew_qei_tb;
         end
 
         // +256 counts
-        c0 = tt_um_jakedrew_qei_tb.dut.count;
-        repeat (64) fwd_cycle();
-        c1 = tt_um_jakedrew_qei_tb.dut.count;
-        if (((c1 - c0) & 16'hFFFF) != 16'd256) begin
-            $display("FAILED: +256 internal, delta=%0d", ((c1 - c0) & 16'hFFFF));
-            $finish_and_return(1);
-        end
+        `ifdef GL_TEST
+            begin : pins_256_fwd
+                integer p0, p1;
+                p0 = full15(uo_out, uio_out);
+                repeat (64) fwd_cycle();
+                p1 = full15(uo_out, uio_out);
+                if (((p1 - p0) & 15'h7FFF) != 15'd256) begin
+                    $display("FAILED: +256 via pins (delta=%0d)", ((p1 - p0) & 15'h7FFF));
+                    $finish_and_return(1);
+                end
+            end
+        `else
+            // RTL: it’s fine to peek the internal counter
+            begin : internal_256_fwd
+                integer c0, c1;
+                c0 = tt_um_jakedrew_qei_tb.dut.count;
+                repeat (64) fwd_cycle();
+                c1 = tt_um_jakedrew_qei_tb.dut.count;
+                if (((c1 - c0) & 16'hFFFF) != 16'd256) begin
+                    $display("FAILED: +256 internal (delta=%0d)", ((c1 - c0) & 16'hFFFF));
+                    $finish_and_return(1);
+                end
+            end
+        `endif
 
-        // -256 counts back
-        c0 = tt_um_jakedrew_qei_tb.dut.count;
-        repeat (64) bwd_cycle();
-        c1 = tt_um_jakedrew_qei_tb.dut.count;
-        if (((c0 - c1) & 16'hFFFF) != 16'd256) begin
-            $display("FAILED: -256 internal, delta=%0d", ((c0 - c1) & 16'hFFFF));
-            $finish_and_return(1);
-        end
+        // −256 counts
+        `ifdef GL_TEST
+            begin : pins_256_bwd
+                integer p0, p1;
+                p0 = full15(uo_out, uio_out);
+                repeat (64) bwd_cycle();
+                p1 = full15(uo_out, uio_out);
+                if (((p0 - p1) & 15'h7FFF) != 15'd256) begin
+                    $display("FAILED: -256 via pins (delta=%0d)", ((p0 - p1) & 15'h7FFF));
+                    $finish_and_return(1);
+                end
+            end
+        `else
+            begin : internal_256_bwd
+                integer c0, c1;
+                c0 = tt_um_jakedrew_qei_tb.dut.count;
+                repeat (64) bwd_cycle();
+                c1 = tt_um_jakedrew_qei_tb.dut.count;
+                if (((c0 - c1) & 16'hFFFF) != 16'd256) begin
+                    $display("FAILED: -256 internal (delta=%0d)", ((c0 - c1) & 16'hFFFF));
+                    $finish_and_return(1);
+                end
+            end
+        `endif
 
         $display("PASS");
         $finish;
