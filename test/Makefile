@@ -1,45 +1,43 @@
-# Makefile
-# See https://docs.cocotb.org/en/stable/quickstart.html for more info
+# test/Makefile
+TOP_MODULE       ?= tt_um_jakedrew_qei
+TB_TOP           ?= tt_um_jakedrew_qei_tb
 
-# defaults
-SIM ?= icarus
-WAVES ?= 1
-TOPLEVEL_LANG ?= verilog
-SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v
+SRC_DIR          ?= ../src
+BUILD            ?= build
 
-ifneq ($(GATES),yes)
+# verilog sources
+PROJECT_SOURCES  ?= $(SRC_DIR)/qei.v
+TB_SOURCES       ?= $(TB_TOP).v
 
-# RTL simulation:
-SIM_BUILD				= sim_build/rtl
-VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
-
+# gate-level support (set GATES=yes and ensure PDK_ROOT & gate_level_netlist.v exist)
+ifeq ($(GATES),yes)
+  IVERILOG_DEFS  += -DGL_TEST -DFUNCTIONAL -DUSE_POWER_PINS -DSIM -DUNIT_DELAY=\#1
+  GL_SOURCES     += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
+  GL_SOURCES     += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
+  GL_SOURCES     += $(PWD)/gate_level_netlist.v
+  SIM_SOURCES     = $(GL_SOURCES) $(TB_SOURCES)
 else
-
-# Gate level simulation:
-SIM_BUILD				= sim_build/gl
-COMPILE_ARGS    += -DGL_TEST
-COMPILE_ARGS    += -DFUNCTIONAL
-COMPILE_ARGS    += -DUSE_POWER_PINS
-COMPILE_ARGS    += -DSIM
-COMPILE_ARGS    += -DUNIT_DELAY=\#1
-VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
-VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
-
-# this gets copied in by the GDS action workflow
-VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
-
+  SIM_SOURCES     = $(PROJECT_SOURCES) $(TB_SOURCES)
 endif
 
-# Allow sharing configuration between design and testbench via `include`:
-COMPILE_ARGS 		+= -I$(SRC_DIR)
+.PHONY: test lint clean waves
 
-# Include the testbench sources:
-VERILOG_SOURCES += $(PWD)/tb.v
-TOPLEVEL = tb
+test: $(BUILD)/sim.vvp
+	vvp $(BUILD)/sim.vvp
 
-# List test modules to run, separated by commas and without the .py suffix:
-COCOTB_TEST_MODULES = test
+$(BUILD)/sim.vvp: $(SIM_SOURCES) | $(BUILD)
+	iverilog -g2012 -o $(BUILD)/sim.vvp $(IVERILOG_DEFS) $(SIM_SOURCES)
 
-# include cocotb's make rules to take care of the simulator setup
-include $(shell cocotb-config --makefiles)/Makefile.sim
+$(BUILD):
+	mkdir -p $(BUILD)
+
+# lint the verilog / RTL (skipped when GATES=yes)
+lint:
+ifeq ($(GATES),yes)
+	@echo "lint: skipped for gate-level"
+else
+	verilator --lint-only -Wall $(PROJECT_SOURCES)
+endif
+
+clean:
+	rm -rf $(BUILD)
