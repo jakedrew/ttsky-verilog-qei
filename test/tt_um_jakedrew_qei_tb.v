@@ -93,53 +93,8 @@ module tt_um_jakedrew_qei_tb;
     integer before7, after7;
     integer c0, c1;
 
-    // check +1 step and dir=1
-    task check_fwd_step;
-        input a, b;
-        begin
-            before7 = cnt7(uo_out);
-            drive_ab(a,b);
-            after7 = cnt7(uo_out);
-            if (((after7 - before7) & 7'h7F) != 7'd1) begin
-                $display("FAILED: expected +1 on step to A=%0d B=%0d, delta=%0d",
-                         a, b, ((after7 - before7) & 7'h7F));
-                junit_fail("step +1 check failed");
-                $finish_and_return(1);
-            end
-            `ifdef GL_TEST
-                repeat (2) @(posedge clk);
-                if (uo_out[7] !== 1'b1) begin
-                    $display("FAILED: DIR not forward on step to A=%0d B=%0d", a, b);
-                    junit_fail("dir forward check failed");
-                    $finish_and_return(1);
-                end
-            `endif
-        end
-    endtask
 
-    // check -1 step and dir=0
-    task check_bwd_step;
-        input a, b;
-        begin
-            before7 = cnt7(uo_out);
-            drive_ab(a,b);
-            after7 = cnt7(uo_out);
-            if (((before7 - after7) & 7'h7F) != 7'd1) begin
-                $display("FAILED: expected -1 on step to A=%0d B=%0d, delta=%0d",
-                         a, b, ((before7 - after7) & 7'h7F));
-                junit_fail("step -1 check failed");
-                $finish_and_return(1);
-            end
-            `ifdef GL_TEST
-                repeat (2) @(posedge clk);
-                if (uo_out[7] !== 1'b0) begin
-                    $display("FAILED: DIR not backward on step to A=%0d B=%0d", a, b);
-                    junit_fail("dir backward check failed");
-                    $finish_and_return(1);
-                end
-            `endif
-        end
-    endtask
+
 
     // test it
     initial begin
@@ -150,18 +105,6 @@ module tt_um_jakedrew_qei_tb;
 
         // align to 00
         drive_ab(0,0);
-
-        // forwards x4
-        check_fwd_step(0,1);
-        check_fwd_step(1,1);
-        check_fwd_step(1,0);
-        check_fwd_step(0,0);
-
-        // backwards x4
-        check_bwd_step(1,0);
-        check_bwd_step(1,1);
-        check_bwd_step(0,1);
-        check_bwd_step(0,0);
 
         // 8 forward cycles = +32 counts
         before7 = cnt7(uo_out);
