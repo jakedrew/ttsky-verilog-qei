@@ -23,6 +23,25 @@ module tt_um_jakedrew_qei_tb;
         $dumpvars(0, tt_um_jakedrew_qei_tb);
     end
 
+    integer junit_fd;
+    task junit_pass; begin
+        junit_fd = $fopen("results.xml","w");
+        if (junit_fd) begin
+            $fwrite(junit_fd,
+                "<testsuite tests=\"1\" failures=\"0\"><testcase classname=\"tt_um_jakedrew_qei\" name=\"rtl\"/></testsuite>");
+            $fclose(junit_fd);
+        end
+    end endtask
+    task junit_fail; input [1023:0] msg; begin
+        junit_fd = $fopen("results.xml","w");
+        if (junit_fd) begin
+            $fwrite(junit_fd,
+                "<testsuite tests=\"1\" failures=\"1\"><testcase classname=\"tt_um_jakedrew_qei\" name=\"rtl\"><failure message=\"%0s\"/></testcase></testsuite>",
+                msg);
+            $fclose(junit_fd);
+        end
+    end endtask
+
     // 15-bit observable count
     function [14:0] full15;
         input [7:0] uo, uio;
@@ -84,10 +103,12 @@ module tt_um_jakedrew_qei_tb;
             if (((after7 - before7) & 7'h7F) != 7'd1) begin
                 $display("FAILED: expected +1 on step to A=%0d B=%0d, delta=%0d",
                          a, b, ((after7 - before7) & 7'h7F));
+                junit_fail("step +1 check failed");
                 $finish_and_return(1);
             end
             if (uo_out[7] !== 1'b1) begin
                 $display("FAILED: DIR not forward on step to A=%0d B=%0d", a, b);
+                junit_fail("dir forward check failed");
                 $finish_and_return(1);
             end
         end
@@ -103,10 +124,12 @@ module tt_um_jakedrew_qei_tb;
             if (((before7 - after7) & 7'h7F) != 7'd1) begin
                 $display("FAILED: expected -1 on step to A=%0d B=%0d, delta=%0d",
                          a, b, ((before7 - after7) & 7'h7F));
+                junit_fail("step -1 check failed");
                 $finish_and_return(1);
             end
             if (uo_out[7] !== 1'b0) begin
                 $display("FAILED: DIR not backward on step to A=%0d B=%0d", a, b);
+                junit_fail("dir backward check failed");
                 $finish_and_return(1);
             end
         end
@@ -141,6 +164,7 @@ module tt_um_jakedrew_qei_tb;
         if (((after7 - before7) & 7'h7F) != 7'd32) begin
             $display("FAILED: 8 forward cycles, delta=%0d",
                      ((after7 - before7) & 7'h7F));
+            junit_fail("8 forward cycles check failed");
             $finish_and_return(1);
         end
 
@@ -153,11 +177,11 @@ module tt_um_jakedrew_qei_tb;
                 p1 = full15(uo_out, uio_out);
                 if (((p1 - p0) & 15'h7FFF) != 15'd256) begin
                     $display("FAILED: +256 via pins (delta=%0d)", ((p1 - p0) & 15'h7FFF));
+                    junit_fail("+256 pins check failed");
                     $finish_and_return(1);
                 end
             end
         `else
-            // RTL: it’s fine to peek the internal counter
             begin : internal_256_fwd
                 integer c0, c1;
                 c0 = tt_um_jakedrew_qei_tb.dut.count;
@@ -165,6 +189,7 @@ module tt_um_jakedrew_qei_tb;
                 c1 = tt_um_jakedrew_qei_tb.dut.count;
                 if (((c1 - c0) & 16'hFFFF) != 16'd256) begin
                     $display("FAILED: +256 internal (delta=%0d)", ((c1 - c0) & 16'hFFFF));
+                    junit_fail("+256 internal check failed");
                     $finish_and_return(1);
                 end
             end
@@ -179,6 +204,7 @@ module tt_um_jakedrew_qei_tb;
                 p1 = full15(uo_out, uio_out);
                 if (((p0 - p1) & 15'h7FFF) != 15'd256) begin
                     $display("FAILED: -256 via pins (delta=%0d)", ((p0 - p1) & 15'h7FFF));
+                    junit_fail("-256 pins check failed");
                     $finish_and_return(1);
                 end
             end
@@ -190,12 +216,14 @@ module tt_um_jakedrew_qei_tb;
                 c1 = tt_um_jakedrew_qei_tb.dut.count;
                 if (((c0 - c1) & 16'hFFFF) != 16'd256) begin
                     $display("FAILED: -256 internal (delta=%0d)", ((c0 - c1) & 16'hFFFF));
+                    junit_fail("-256 internal check failed");
                     $finish_and_return(1);
                 end
             end
         `endif
 
         $display("PASS");
+        junit_pass();
         $finish;
     end
 endmodule
