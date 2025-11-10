@@ -9,13 +9,26 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Text to trigger new workflow. again
-Explain how your project works
+qei.v: Quadrature Encoder Interface
 
+Inputs:
+    - A (ui_in[0])
+    - B (ui_in[1])
+
+Outputs:
+    - DIR (uo_out[7], where 1 = forwards, 0 = backwards)
+    - COUNT (uio_out + uo_out[6:0], which is 15 bit count)
+    
+Notes:
+    - DIR is direction relate to last state, so as soon as COUNT starts
+    decreasing DIR will be 0, it is not a negative.
+    - Forward = increasing count.
+    - COUNT is the count since the initial index
+      
 ## How to test
 
-Explain how to use your project
+Connect a quadrature output to A and B, and then read COUNT / DIR.
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+Quadrature interface device
