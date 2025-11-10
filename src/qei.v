@@ -76,7 +76,6 @@ module tt_um_jakedrew_qei (
     assign uio_out = rst_n ? count[14:7] : 8'h00;   // next 8 bits of the counter
 
     // List all unused inputs to prevent warnings
-    wire _unused = &{ena, clk, rst_n, 1'b0};
-    wire _unused_ok = &{ui_in[7:2], uio_in, 1'b0};  
+    wire _unused = &{ena, clk, rst_n, ui_in[7:2], uio_in, 1'b0};
 
 endmodule
