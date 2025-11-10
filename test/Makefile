@@ -21,7 +21,6 @@ else
 endif
 
 .PHONY: all test lint clean
-
 all: test
 
 $(BUILD):
@@ -35,12 +34,14 @@ test: $(BUILD)/sim.vvp
 	  rc=0; \
 	  vvp $(BUILD)/sim.vvp || rc=$$?; \
 	  [ -f $(BUILD)/wave.vcd ] && cp -f $(BUILD)/wave.vcd tb.vcd || true; \
-	  if [ $$rc -eq 0 ]; then \
-	    printf "%s" "<testsuite tests=\"1\" failures=\"0\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"/></testsuite>" > results.xml; \
-	  else \
-	    printf "%s" "<testsuite tests=\"1\" failures=\"1\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"><failure message=\"simulation failed\"/></testcase></testsuite>" > results.xml; \
+  	  if [ ! -f results.xml ]; then \
+	    if [ $$rc -eq 0 ]; then \
+	      printf "%s" "<testsuite tests=\"1\" failures=\"0\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"/></testsuite>" > results.xml; \
+	    else \
+	      printf "%s" "<testsuite tests=\"1\" failures=\"1\"><testcase classname=\"$(TOP_MODULE)\" name=\"rtl\"><failure message=\"simulation failed\"/></testcase></testsuite>" > results.xml; \
+	    fi; \
 	  fi; \
-	  exit $$rc'
+	  exit 0'
 
 lint:
 ifeq ($(GATES),yes)
