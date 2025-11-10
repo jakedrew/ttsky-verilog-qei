@@ -28,7 +28,7 @@ module tt_um_jakedrew_qei_tb;
         junit_fd = $fopen("results.xml","w");
         if (junit_fd) begin
             $fwrite(junit_fd,
-                "<testsuite tests=\"1\" failures=\"0\"><testcase classname=\"tt_um_jakedrew_qei\" name=\"rtl\"/></testsuite>");
+                "<testsuite tests=\"1\"><testcase classname=\"tt_um_jakedrew_qei\" name=\"rtl\"/></testsuite>");
             $fclose(junit_fd);
         end
     end endtask
