@@ -224,6 +224,6 @@ module tt_um_jakedrew_qei_tb;
 
         $display("PASS");
         junit_pass();
-        $finish;
+        $finish_and_return(0);
     end
 endmodule
