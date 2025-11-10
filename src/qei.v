@@ -77,6 +77,6 @@ module tt_um_jakedrew_qei (
 
     // List all unused inputs to prevent warnings
     wire _unused = &{ena, clk, rst_n, 1'b0};
-
+    wire _unused_ok = &{ui_in[7:2], uio_in, 1'b0};  
 
 endmodule
